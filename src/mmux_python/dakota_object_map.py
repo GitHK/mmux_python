@@ -1,14 +1,14 @@
-from typing import Callable, List
-import logging
-import uuid
-import traceback
 import contextlib
+import logging
 import os
+import traceback
+import uuid
+from collections.abc import Callable
 from pathlib import Path
-import dakota.environment as dakenv
+
+import dakota.environment as dakenv  # type: ignore
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename="example.log", encoding="utf-8", level=logging.DEBUG)
 
 
 @contextlib.contextmanager
@@ -23,7 +23,6 @@ def working_directory(path):
 
 
 class Map:
-    ## TODO should the "model" Callable be given here or in DakotaObject?
     def __init__(self, model: Callable, n_runners: int = 1) -> None:
         logger.info("Creating caller map")
         self.model = model
@@ -33,7 +32,7 @@ class Map:
         logger.info(f"Optimizer uuid is {self.uuid}")
         pass
 
-    def evaluate(self, params_set: List[dict]):
+    def evaluate(self, params_set: list[dict]):
         outputs_set = []
         logger.info(f"Evaluating {len(params_set)} parameter sets")
         logger.debug(f"Evaluating: {params_set}")
@@ -56,7 +55,7 @@ class DakotaObject:
         self.map_object = map_object
         logger.info("DakotaObject created")
 
-    def model_callback(self, dak_inputs: List[dict]) -> List[dict]:
+    def model_callback(self, dak_inputs: list[dict]) -> list[dict]:
         try:
             logger.info("Into model_callback")
             param_sets = [
@@ -104,9 +103,8 @@ class DakotaObject:
             callback = None
         print("Starting dakota")
         dakota_restart_path = output_dir / "dakota.rst"
-        with working_directory(output_dir):
+        with working_directory(output_dir):  # type: ignore
             study = dakenv.study(  # type: ignore
-                # callbacks=callbacks,
                 callback=callback,
                 input_string=dakota_conf,
                 read_restart=(
@@ -114,14 +112,3 @@ class DakotaObject:
                 ),
             )
             study.execute()
-
-
-# if __name__ == "__main__":
-# import logging
-
-# logger = logging.getLogger(__name__)
-# logging.basicConfig(filename="example.log", encoding="utf-8", level=logging.DEBUG)
-# logger.debug("This message should go to the log file")
-# logger.info("So should this")
-# logger.warning("And this, too")
-# logger.error("And non-ASCII stuff, too, like Øresund and Malmö")
